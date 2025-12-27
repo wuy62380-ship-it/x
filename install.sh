@@ -22,19 +22,22 @@ detect_arch() {
 install_or_update_hysteria2() {
     echo "[HY2] Fetching latest Hysteria2 version..."
 
-    LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/apernet/hysteria/releases/latest \
+    RAW_VERSION=$(curl -fsSL https://api.github.com/repos/apernet/hysteria/releases/latest \
         | grep tag_name | cut -d '"' -f 4)
 
-    if [[ -z "$LATEST_VERSION" ]]; then
+    if [[ -z "$RAW_VERSION" ]]; then
         echo "[ERROR] Failed to fetch latest Hysteria2 version"
         exit 1
     fi
+
+    # Remove "app/" prefix if present
+    LATEST_VERSION=${RAW_VERSION#app/}
 
     echo "[HY2] Latest version: $LATEST_VERSION"
 
     ARCH=$(detect_arch)
 
-    DOWNLOAD_URL="https://github.com/apernet/hysteria/releases/download/${LATEST_VERSION}/hysteria-${LATEST_VERSION}-linux-${ARCH}.tar.gz"
+    DOWNLOAD_URL="https://github.com/apernet/hysteria/releases/download/${LATEST_VERSION}/hysteria-linux-${ARCH}.tar.gz"
 
     echo "[HY2] Downloading: $DOWNLOAD_URL"
     curl -fsSL "$DOWNLOAD_URL" -o hysteria.tar.gz
