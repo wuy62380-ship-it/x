@@ -1,24 +1,24 @@
+# 监听地址与端口
 listen: :443
-protocol: udp
 
-auth:
-  type: password
-  password: "yourpassword"
+# 认证密码（你的订阅链接会用到这个）
+password: your_password_here
 
-tls:
-  cert: /etc/hysteria/certs/cert.pem
-  key: /etc/hysteria/certs/key.pem
+# 服务域名（用于订阅链接与 TLS SNI）
+server_name: your.domain.com
 
-quic:
-  init_stream_window: 268435456
-  max_stream_window: 268435456
-  init_conn_window: 268435456
-  max_conn_window: 268435456
+# ACME 申请证书的域名（可选，如果你用 ACME 自动签证书）
+acme_domain: your.domain.com
 
-bandwidth:
-  up: 200 mbps
-  down: 200 mbps
+# 可选：底层传输协议相关（按需要开）
+#udp_timeout: 60s
 
-transport:
-  udp:
-    hop_interval: 30s
+# 可选：带宽、限速（按需配置）
+#bandwidth:
+#  up: 50 mbps
+#  down: 100 mbps
+
+# 可选：TLS 配置（如果不用 ACME，也可以手动指定证书）
+#tls:
+#  cert: /etc/hysteria/cert.pem
+#  key: /etc/hysteria/key.pem
