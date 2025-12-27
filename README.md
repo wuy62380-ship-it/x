@@ -1,1 +1,1 @@
-bash <(curl -fsSL https://raw.githubusercontent.com/wuy62380/ship-it/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/wuy62380-ship-it/x/main/install.sh)
