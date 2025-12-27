@@ -37,22 +37,25 @@ install_or_update_hysteria2() {
 
     ARCH=$(detect_arch)
 
-    DOWNLOAD_URL="https://github.com/apernet/hysteria/releases/download/${LATEST_VERSION}/hysteria-linux-${ARCH}.tar.gz"
+    DOWNLOAD_URL="https://github.com/apernet/hysteria/releases/download/${LATEST_VERSION}/hysteria-linux-${ARCH}.zip"
 
     echo "[HY2] Downloading: $DOWNLOAD_URL"
-    curl -fsSL "$DOWNLOAD_URL" -o hysteria.tar.gz
+    curl -fsSL "$DOWNLOAD_URL" -o hysteria.zip
 
     echo "[HY2] Extracting..."
-    tar -xzf hysteria.tar.gz
+    unzip -o hysteria.zip >/dev/null 2>&1
 
-    if [[ ! -f "hysteria" ]]; then
-        echo "[ERROR] Extracted package does not contain 'hysteria' binary"
+    # Find extracted binary
+    BIN_FILE=$(find . -maxdepth 1 -type f -name "hysteria*" ! -name "*.zip" | head -n 1)
+
+    if [[ -z "$BIN_FILE" ]]; then
+        echo "[ERROR] Extracted package does not contain hysteria binary"
         exit 1
     fi
 
-    mv hysteria /usr/local/bin/hysteria
+    mv "$BIN_FILE" /usr/local/bin/hysteria
     chmod +x /usr/local/bin/hysteria
-    rm -f hysteria.tar.gz
+    rm -f hysteria.zip
 
     echo "[HY2] Installed to /usr/local/bin/hysteria"
 }
