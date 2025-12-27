@@ -1,46 +1,112 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-echo "=== 安装 Hysteria2 ==="
-curl https://get.hy2.sh/ | bash
+# ============================
+#  Detect architecture
+# ============================
+detect_arch() {
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64) echo "amd64" ;;
+        aarch64|arm64) echo "arm64" ;;
+        *)
+            echo "Unsupported architecture: $ARCH"
+            exit 1
+            ;;
+    esac
+}
 
-mkdir -p /etc/hysteria/certs
+# ============================
+#  Install or update Hysteria2
+# ============================
+install_or_update_hysteria2() {
+    echo "[HY2] Fetching latest Hysteria2 version..."
 
-echo "=== 生成自签证书 ==="
-openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout /etc/hysteria/certs/key.pem \
-  -out /etc/hysteria/certs/cert.pem \
-  -days 3650 -subj "/CN=Hysteria"
+    LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/apernet/hysteria/releases/latest \
+        | grep tag_name | cut -d '"' -f 4)
 
-echo "=== 写入配置文件 ==="
-cat > /etc/hysteria/config.yaml << EOF
-listen: :443
-protocol: udp
+    echo "[HY2] Latest version: $LATEST_VERSION"
 
-auth:
-  type: password
-  password: "yourpassword"
+    ARCH=$(detect_arch)
 
-tls:
-  cert: /etc/hysteria/certs/cert.pem
-  key: /etc/hysteria/certs/key.pem
+    DOWNLOAD_URL="https://github.com/apernet/hysteria/releases/download/${LATEST_VERSION}/hysteria-${LATEST_VERSION}-linux-${ARCH}.tar.gz"
 
-quic:
-  init_stream_window: 268435456
-  max_stream_window: 268435456
-  init_conn_window: 268435456
-  max_conn_window: 268435456
+    echo "[HY2] Downloading: $DOWNLOAD_URL"
+    curl -fsSL "$DOWNLOAD_URL" -o hysteria.tar.gz
 
-bandwidth:
-  up: 200 mbps
-  down: 200 mbps
+    echo "[HY2] Extracting..."
+    tar -xzf hysteria.tar.gz
+    mv hysteria /usr/local/bin/hysteria
+    chmod +x /usr/local/bin/hysteria
+    rm -f hysteria.tar.gz
 
-transport:
-  udp:
-    hop_interval: 30s
+    echo "[HY2] Installed to /usr/local/bin/hysteria"
+}
+
+# ============================
+#  Install systemd service
+# ============================
+install_systemd_service() {
+    echo "[SYSTEMD] Installing hysteria-server.service..."
+
+    cat >/etc/systemd/system/hysteria-server.service <<EOF
+[Unit]
+Description=Hysteria2 Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/hysteria server -c /etc/hysteria/config.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-echo "=== 启动服务 ==="
-systemctl enable hysteria-server
-systemctl restart hysteria-server
+    systemctl daemon-reload
+    systemctl enable hysteria-server
+}
 
-echo "=== 完成！Hysteria2 已成功部署 ==="
+# ============================
+#  Deploy config
+# ============================
+deploy_config() {
+    echo "[CONFIG] Deploying config.yaml..."
+    mkdir -p /etc/hysteria
+    cp config.yaml /etc/hysteria/config.yaml
+}
+
+# ============================
+#  Deploy client config
+# ============================
+deploy_client() {
+    echo "[CLIENT] Deploying client.yaml..."
+    cp client.yaml /etc/hysteria/client.yaml
+}
+
+# ============================
+#  Restart service
+# ============================
+restart_service() {
+    echo "[SYSTEMD] Restarting hysteria-server..."
+    systemctl restart hysteria-server
+}
+
+# ============================
+#  Main
+# ============================
+main() {
+    install_or_update_hysteria2
+    install_systemd_service
+    deploy_config
+    deploy_client
+    restart_service
+
+    echo "======================================="
+    echo " Hysteria2 installation completed"
+    echo " Version: $LATEST_VERSION"
+    echo " Config:  /etc/hysteria/config.yaml"
+    echo "======================================="
+}
+
+main
