@@ -1,0 +1,24 @@
+listen: :443
+protocol: udp
+
+auth:
+  type: password
+  password: "yourpassword"
+
+tls:
+  cert: /etc/hysteria/certs/cert.pem
+  key: /etc/hysteria/certs/key.pem
+
+quic:
+  init_stream_window: 268435456
+  max_stream_window: 268435456
+  init_conn_window: 268435456
+  max_conn_window: 268435456
+
+bandwidth:
+  up: 200 mbps
+  down: 200 mbps
+
+transport:
+  udp:
+    hop_interval: 30s
