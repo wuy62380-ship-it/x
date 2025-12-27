@@ -1,0 +1,20 @@
+server: 你的服务器IP:443
+auth: "yourpassword"
+
+tls:
+  insecure: true
+  sni: Hysteria
+
+quic:
+  init_stream_window: 268435456
+  max_stream_window: 268435456
+  init_conn_window: 268435456
+  max_conn_window: 268435456
+
+bandwidth:
+  up: 50 mbps
+  down: 100 mbps
+
+transport:
+  udp:
+    hop_interval: 30s
